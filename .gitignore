@@ -49,6 +49,8 @@ frontend/dist/
 !.env.example
 
 # ML Artifacts & Runs
+ml/data/
+ml/data/raw/
 ml/models/*.pkl
 ml/models/*.pt
 ml/models/*.onnx
