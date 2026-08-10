@@ -51,6 +51,7 @@ frontend/dist/
 # ML Artifacts & Runs
 ml/data/
 ml/data/raw/
+ml/data/processed/
 ml/reports/
 ml/models/*.pkl
 ml/models/*.pt
