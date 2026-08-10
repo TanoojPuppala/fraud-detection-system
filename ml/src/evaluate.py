@@ -1,9 +1,10 @@
 """
-Evaluation Script for Logistic Regression Baseline Models.
+Comprehensive Evaluation Script for All Models (Logistic Regression & XGBoost).
 
-Loads trained models and test set, computes key metrics (Precision, Recall, F1,
-ROC-AUC, PR-AUC, Confusion Matrix, Latency), generates an overlaid PR-Curve plot,
-exports a CSV report, and prints a summary comparison table.
+Loads trained models (3 Logistic Regression variants + 1 XGBoost variant),
+evaluates them on the shared test set, outputs a combined comparison CSV,
+generates an overlaid PR-Curve plot across all 4 models, and displays XGBoost's
+top 10 feature importances.
 """
 
 from pathlib import Path
@@ -42,9 +43,9 @@ def run_evaluation() -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("=" * 70)
-    print(" LOGISTIC REGRESSION MODEL EVALUATION")
-    print("=" * 70)
+    print("=" * 75)
+    print(" COMPREHENSIVE MODEL EVALUATION BENCHMARK (4 MODELS)")
+    print("=" * 75)
 
     # 1. Load Test Set
     print("\n[1] Loading test set (X_test.pkl, y_test.pkl) ...")
@@ -52,27 +53,34 @@ def run_evaluation() -> None:
     y_test = joblib.load(PROCESSED_DIR / "y_test.pkl")
     print(f"    Test set size: {len(y_test):,} samples (Fraud cases: {int(y_test.sum())})")
 
+    # Feature Names (Time, V1..V28, Amount)
+    feature_names = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]
+
     # 2. Define Model Variants
     model_configs = [
-        {"name": "Baseline (Class-Weighted)", "file": "logistic_regression_baseline.pkl"},
-        {"name": "SMOTE (Oversampled)", "file": "logistic_regression_smote.pkl"},
-        {"name": "Undersampled", "file": "logistic_regression_undersampled.pkl"},
+        {"name": "Logistic Regression (Baseline)", "file": "logistic_regression_baseline.pkl"},
+        {"name": "Logistic Regression (SMOTE)", "file": "logistic_regression_smote.pkl"},
+        {"name": "Logistic Regression (Undersampled)", "file": "logistic_regression_undersampled.pkl"},
+        {"name": "XGBoost (SMOTE)", "file": "xgboost_smote.pkl"},
     ]
 
     results = []
-    pr_curve_data = []
+    fig, ax = plt.subplots(figsize=(9, 6))
 
-    print("\n[2] Evaluating models on test set ...")
-    fig, ax = plt.subplots(figsize=(8, 6))
+    xgb_model = None
 
+    print("\n[2] Evaluating models on held-out test set ...")
     for config in model_configs:
         model_path = MODELS_DIR / config["file"]
         if not model_path.exists():
-            raise FileNotFoundError(f"Model file not found: {model_path}")
-        
-        clf = joblib.load(model_path)
+            print(f"    [SKIP] Model not found: {model_path}")
+            continue
 
-        # Measure inference latency
+        clf = joblib.load(model_path)
+        if config["name"] == "XGBoost (SMOTE)":
+            xgb_model = clf
+
+        # Measure latency
         start_time = time.perf_counter()
         y_probs = clf.predict_proba(X_test)[:, 1]
         inference_time_ms = (time.perf_counter() - start_time) * 1000.0
@@ -88,7 +96,7 @@ def run_evaluation() -> None:
         tn, fp, fn, tp = confusion_matrix(y_test, y_preds).ravel()
 
         results.append({
-            "Variant": config["name"],
+            "Model Variant": config["name"],
             "Precision": prec,
             "Recall": rec,
             "F1-Score": f1,
@@ -101,35 +109,35 @@ def run_evaluation() -> None:
             "Inference Time (ms)": inference_time_ms
         })
 
-        # Precision-Recall Curve Plotting
+        # Precision-Recall Curve
         precision_arr, recall_arr, _ = precision_recall_curve(y_test, y_probs)
         ax.plot(recall_arr, precision_arr, label=f"{config['name']} (PR-AUC = {pr_auc:.4f})", lw=2)
 
-    # Finalize and Save PR-Curve Plot
-    ax.set_title("Precision-Recall Curves — Logistic Regression Variants", fontsize=13, fontweight="bold", pad=12)
+    # 3. Save PR Curve Figure
+    ax.set_title("Precision-Recall Curves — All Models Benchmark", fontsize=13, fontweight="bold", pad=12)
     ax.set_xlabel("Recall", fontsize=11)
     ax.set_ylabel("Precision", fontsize=11)
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
     ax.legend(loc="lower left", frameon=True)
 
-    fig_path = FIGURES_DIR / "logistic_regression_pr_curves.png"
+    fig_path = FIGURES_DIR / "all_models_pr_curves.png"
     fig.savefig(fig_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"    Saved PR-Curve plot -> {fig_path}")
+    print(f"    Saved 4-model PR-Curve plot -> {fig_path}")
 
-    # 3. Create Summary Dataframe & Save CSV
+    # 4. Save CSV Reports
     df_results = pd.DataFrame(results)
-    csv_path = REPORTS_DIR / "logistic_regression_comparison.csv"
-    df_results.to_csv(csv_path, index=False)
-    print(f"    Saved comparison metrics CSV -> {csv_path}")
+    csv_all_path = REPORTS_DIR / "model_comparison_all.csv"
+    df_results.to_csv(csv_all_path, index=False)
+    print(f"    Saved combined comparison CSV -> {csv_all_path}")
 
-    # 4. Print Summary Table
-    print("\n" + "=" * 85)
-    print(" LOGISTIC REGRESSION PERFORMANCE COMPARISON")
-    print("=" * 85)
-    
-    header = f"{'Variant':<28} | {'Precision':>9} | {'Recall':>9} | {'F1-Score':>9} | {'ROC-AUC':>9} | {'PR-AUC':>9} | {'FP':>5} | {'FN':>4}"
+    # 5. Print Combined Comparison Table
+    print("\n" + "=" * 92)
+    print(" ALL MODELS BENCHMARK PERFORMANCE COMPARISON")
+    print("=" * 92)
+
+    header = f"{'Model Variant':<38} | {'Precision':>9} | {'Recall':>9} | {'F1-Score':>9} | {'ROC-AUC':>9} | {'PR-AUC':>9} | {'FP':>5} | {'FN':>4}"
     sep = "-" * len(header)
     print("\n" + sep)
     print(header)
@@ -137,29 +145,46 @@ def run_evaluation() -> None:
 
     for r in results:
         print(
-            f"{r['Variant']:<28} | {r['Precision']:>9.4f} | {r['Recall']:>9.4f} | "
+            f"{r['Model Variant']:<38} | {r['Precision']:>9.4f} | {r['Recall']:>9.4f} | "
             f"{r['F1-Score']:>9.4f} | {r['ROC-AUC']:>9.4f} | {r['PR-AUC']:>9.4f} | "
             f"{r['FP']:>5} | {r['FN']:>4}"
         )
     print(sep)
 
-    # 5. Determine Best Performers
-    best_pr_auc_row = df_results.loc[df_results["PR-AUC"].idxmax()]
-    best_f1_row = df_results.loc[df_results["F1-Score"].idxmax()]
+    # 6. Feature Importance Table (XGBoost)
+    if xgb_model is not None:
+        importances = xgb_model.feature_importances_
+        feat_imp_df = pd.DataFrame({
+            "Feature": feature_names,
+            "Importance": importances
+        }).sort_values(by="Importance", ascending=False)
 
-    print("\n" + "=" * 85)
-    print(" CONCLUSION & RECOMMENDATION")
-    print("=" * 85)
-    print(f" [*] Best PR-AUC  : {best_pr_auc_row['Variant']} with PR-AUC = {best_pr_auc_row['PR-AUC']:.4f}")
-    print(f" [*] Best F1-Score: {best_f1_row['Variant']} with F1-Score = {best_f1_row['F1-Score']:.4f}")
-    print("\n [STRATEGY DECISION]")
-    if best_pr_auc_row["Variant"] == best_f1_row["Variant"]:
-        print(f"     '{best_pr_auc_row['Variant']}' clearly dominates across both PR-AUC and F1-Score.")
-        print(f"     Recommended for standardization in upcoming XGBoost and Deep Neural Network models.")
+        print("\n" + "=" * 75)
+        print(" XGBOOST FEATURE IMPORTANCE (TOP 10 FEATURES)")
+        print("=" * 75)
+        top10 = feat_imp_df.head(10)
+        print(f"{'Rank':<5} | {'Feature':<12} | {'Importance Score':>18}")
+        print("-" * 42)
+        for idx, (_, row) in enumerate(top10.iterrows(), 1):
+            print(f"{idx:<5} | {row['Feature']:<12} | {row['Importance']:>18.6f}")
+        print("-" * 42)
+
+    # 7. Winner Analysis
+    lr_best_pr_auc = df_results[df_results["Model Variant"].str.startswith("Logistic")]["PR-AUC"].max()
+    xgb_row = df_results[df_results["Model Variant"] == "XGBoost (SMOTE)"].iloc[0]
+    xgb_pr_auc = xgb_row["PR-AUC"]
+    diff = xgb_pr_auc - lr_best_pr_auc
+
+    print("\n" + "=" * 75)
+    print(" XGBOOST VS LOGISTIC REGRESSION COMPARISON SUMMARY")
+    print("=" * 75)
+    print(f" [*] Best Logistic Regression PR-AUC : {lr_best_pr_auc:.4f}")
+    print(f" [*] XGBoost (SMOTE) PR-AUC          : {xgb_pr_auc:.4f}")
+    if diff > 0:
+        print(f" [*] Result: XGBoost BEAT Logistic Regression by +{diff:.4f} PR-AUC (+{diff/lr_best_pr_auc*100:.2f}%)!")
     else:
-        print(f"     PR-AUC champion is '{best_pr_auc_row['Variant']}', while F1 champion is '{best_f1_row['Variant']}'.")
-        print(f"     PR-AUC is prioritized for imbalanced fraud detection. Recommended strategy: '{best_pr_auc_row['Variant']}'.")
-    print("=" * 85)
+        print(f" [*] Result: XGBoost underperformed Logistic Regression by {diff:.4f} PR-AUC.")
+    print("=" * 75)
 
 
 if __name__ == "__main__":
