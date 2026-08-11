@@ -32,7 +32,7 @@ export interface PredictionResult {
   model_version: string;
   inference_time_ms: number;
   top_shap_features?: Array<{
-    feature: str;
+    feature: string;
     value: number;
     shap_value: number;
     impact: string;
