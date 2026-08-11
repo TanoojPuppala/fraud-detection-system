@@ -1,9 +1,19 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Dynamic API Base URL: Uses relative URL in production or window.location.origin
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin.includes('localhost:5173')) {
+      return 'http://localhost:8000/api/v1';
+    }
+    return `${origin}/api/v1`;
+  }
+  return '/api/v1';
+};
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

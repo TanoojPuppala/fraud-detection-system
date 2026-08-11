@@ -12,8 +12,7 @@ client = TestClient(app)
 def test_root_endpoint():
     response = client.get("/")
     assert response.status_code == 200
-    data = response.json()
-    assert "version" in data
+    assert "html" in response.headers.get("content-type", "") or "Welcome" in response.text or "<!DOCTYPE html>" in response.text
 
 
 def test_model_info_endpoint():
