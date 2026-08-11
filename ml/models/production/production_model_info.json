@@ -1,0 +1,20 @@
+{
+  "original_model_variant": "PyTorch DNN (SMOTE)",
+  "original_filename": "dnn_smote.pt",
+  "production_filename": "production_model.pt",
+  "selection_date": "2026-08-11T23:24:12.501956",
+  "selection_criteria": "Lowest total business cost (FP=$5, FN=$500) under held-out test evaluation",
+  "metrics": {
+    "Precision": 0.5846153846153846,
+    "Recall": 0.8,
+    "F1-Score": 0.6755555555555556,
+    "ROC-AUC": 0.9513960361177254,
+    "PR-AUC": 0.7171901286100331,
+    "TN": 56597,
+    "FP": 54,
+    "FN": 19,
+    "TP": 76,
+    "Total Business Cost ($)": 9770.0,
+    "Inference Time (ms)": 17.957299947738647
+  }
+}
