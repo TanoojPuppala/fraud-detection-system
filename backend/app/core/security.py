@@ -2,22 +2,31 @@
 Security Utilities: Password Hashing & JWT Authentication.
 """
 
+import hashlib
+import hmac
 from datetime import datetime, timedelta
 from typing import Optional, Union, Any
 from jose import jwt
-from passlib.context import CryptContext
 
 from backend.app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+# Salt for password hashing
+SALT = b"fraud_guard_ai_system_salt_2026"
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    """
+    Computes secure SHA256 HMAC digest of password.
+    """
+    return hmac.new(SALT, password.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Verifies plain text password against stored HMAC hash.
+    """
+    computed = get_password_hash(plain_password)
+    return hmac.compare_digest(computed, hashed_password)
 
 
 def create_access_token(subject: Union[str, Any], expires_delta: Optional[timedelta] = None) -> str:
