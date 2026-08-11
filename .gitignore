@@ -31,6 +31,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Database
+database/*.db
+*.db
+
 # Node / Frontend
 node_modules/
 npm-debug.log*
@@ -52,10 +56,10 @@ frontend/dist/
 ml/data/
 ml/data/raw/
 ml/data/processed/
-ml/reports/
 ml/models/*.pkl
 ml/models/*.pt
 ml/models/*.onnx
+!ml/models/production/production_model.pt
 ml/mlruns/
 *.h5
 

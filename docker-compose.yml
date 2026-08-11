@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/database/fraud_detection.db
+      - SECRET_KEY=super_secret_fraud_detection_jwt_key_2026
+    volumes:
+      - ./database:/app/database
+      - ./ml/models:/app/ml/models
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: always
