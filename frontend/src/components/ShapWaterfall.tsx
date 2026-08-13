@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface FeatureImpact {
   feature: string;
@@ -15,37 +15,51 @@ interface ShapWaterfallProps {
 export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({ features }) => {
   if (!features || features.length === 0) return null;
 
+  const maxAbs = Math.max(...features.map((f) => Math.abs(f.shap_value)));
+
   return (
-    <div className="space-y-3">
-      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-mono">
-        SHAP Feature Attribution Breakdown (Top Factors)
-      </h4>
-      <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="text-xs-caps">SHAP Feature Attribution</div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {features.map((feat, idx) => {
           const isPositive = feat.shap_value > 0;
-          return (
-            <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-xs">
-              <div className="flex items-center space-x-2">
-                {isPositive ? (
-                  <div className="p-1 rounded bg-rose-500/20 text-rose-400">
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </div>
-                ) : (
-                  <div className="p-1 rounded bg-emerald-500/20 text-emerald-400">
-                    <ArrowDownRight className="w-3.5 h-3.5" />
-                  </div>
-                )}
-                <div>
-                  <span className="font-bold text-slate-200">{feat.feature}</span>
-                  <span className="text-slate-500 ml-2 font-mono">val: {feat.value.toFixed(4)}</span>
-                </div>
-              </div>
+          const pct = Math.abs(feat.shap_value) / maxAbs;
 
-              <div className="text-right">
-                <span className={`font-bold font-mono ${isPositive ? 'text-rose-400' : 'text-emerald-400'}`}>
+          return (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isPositive
+                    ? <TrendingUp size={11} color="#f87171" />
+                    : <TrendingDown size={11} color="#34d399" />
+                  }
+                  <span className="mono" style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    {feat.feature}
+                  </span>
+                  <span className="mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                    = {feat.value.toFixed(3)}
+                  </span>
+                </div>
+                <span
+                  className="mono"
+                  style={{ fontSize: 11, fontWeight: 600, color: isPositive ? '#f87171' : '#34d399' }}
+                >
                   {isPositive ? '+' : ''}{feat.shap_value.toFixed(4)}
                 </span>
-                <p className="text-[10px] text-slate-400">{feat.impact}</p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="progress-bar-track">
+                <div
+                  className="progress-bar-fill"
+                  style={{
+                    width: `${pct * 100}%`,
+                    background: isPositive
+                      ? 'linear-gradient(90deg, #dc2626, #f87171)'
+                      : 'linear-gradient(90deg, #059669, #34d399)',
+                  }}
+                />
               </div>
             </div>
           );

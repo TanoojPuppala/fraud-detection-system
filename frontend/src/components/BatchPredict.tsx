@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { UploadCloud, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileText } from 'lucide-react';
 import { predictBatchCSV } from '../api/client';
 
 export const BatchPredict: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [file,    setFile]    = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<any | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+    if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
   };
 
   const handleUpload = async () => {
@@ -27,68 +25,100 @@ export const BatchPredict: React.FC = () => {
   };
 
   return (
-    <div className="glass-card p-6 space-y-6">
-      <div className="flex items-center space-x-3">
-        <div className="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 text-cyan-400">
-          <UploadCloud className="w-6 h-6" />
+    <div className="card" style={{ padding: 24 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+        <div className="section-icon">
+          <UploadCloud size={16} />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-white">Batch Transaction CSV Scoring</h3>
-          <p className="text-xs text-slate-400">Upload a CSV file containing transactions (Time, V1..V28, Amount) for high-throughput batch scoring</p>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>Batch CSV Scoring</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+            Upload CSV (Time, V1..V28, Amount) for high-throughput batch scoring
+          </div>
         </div>
       </div>
 
-      {/* File Dropzone */}
-      <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 rounded-2xl p-8 text-center transition-all bg-slate-900/40">
+      <hr className="divider" style={{ marginBottom: 20 }} />
+
+      {/* Dropzone */}
+      <label
+        htmlFor="csv-upload-input"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 14,
+          padding: '40px 24px',
+          border: '1.5px dashed rgba(255,255,255,0.12)',
+          borderRadius: 12,
+          cursor: 'pointer',
+          background: 'var(--bg-surface)',
+          transition: 'border-color 0.2s, background 0.2s',
+          textAlign: 'center',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLLabelElement).style.borderColor = 'var(--accent-border)';
+          (e.currentTarget as HTMLLabelElement).style.background = 'var(--accent-subtle)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLLabelElement).style.borderColor = 'rgba(255,255,255,0.12)';
+          (e.currentTarget as HTMLLabelElement).style.background = 'var(--bg-surface)';
+        }}
+      >
         <input
           type="file"
           accept=".csv"
           onChange={handleFileChange}
-          className="hidden"
+          style={{ display: 'none' }}
           id="csv-upload-input"
         />
-        <label htmlFor="csv-upload-input" className="cursor-pointer flex flex-col items-center space-y-3">
-          <FileText className="w-10 h-10 text-cyan-400" />
-          <div>
-            <span className="text-sm font-semibold text-slate-200">
-              {file ? file.name : 'Click to select CSV file or drag and drop'}
-            </span>
-            <p className="text-xs text-slate-500 mt-1">Supports standard Kaggle creditcard.csv formatted files</p>
+        <div className="section-icon" style={{ width: 48, height: 48, borderRadius: 12 }}>
+          <FileText size={20} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>
+            {file ? file.name : 'Click to select CSV file'}
           </div>
-        </label>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+            Supports Kaggle creditcard.csv format
+          </div>
+        </div>
 
         {file && (
           <button
-            onClick={handleUpload}
+            type="button"
+            onClick={(e) => { e.preventDefault(); handleUpload(); }}
             disabled={loading}
-            className="mt-5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all"
+            className="btn-primary"
+            style={{ marginTop: 4 }}
           >
-            {loading ? 'Processing Batch...' : 'Process Batch Predictions'}
+            {loading ? 'Processing…' : 'Run Batch Predictions'}
           </button>
         )}
-      </div>
+      </label>
 
-      {/* Summary Matrix */}
+      {/* Results */}
       {summary && (
-        <div className="space-y-4 pt-4 border-t border-slate-800">
-          <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Batch Processing Results</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-xs text-slate-400 font-mono">Total Processed</span>
-              <p className="text-xl font-extrabold text-white mt-1">{summary.total_processed}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-slate-900 border border-rose-500/30">
-              <span className="text-xs text-rose-400 font-mono">Fraud Flagged</span>
-              <p className="text-xl font-extrabold text-rose-400 mt-1">{summary.fraud_detected_count}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-slate-900 border border-amber-500/30">
-              <span className="text-xs text-amber-400 font-mono">High Risk</span>
-              <p className="text-xl font-extrabold text-amber-400 mt-1">{summary.high_risk_count}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-slate-900 border border-emerald-500/30">
-              <span className="text-xs text-emerald-400 font-mono">Low Risk</span>
-              <p className="text-xl font-extrabold text-emerald-400 mt-1">{summary.low_risk_count}</p>
-            </div>
+        <div className="fade-in" style={{ marginTop: 24 }}>
+          <hr className="divider" style={{ marginBottom: 18 }} />
+          <div className="text-xs-caps" style={{ marginBottom: 14 }}>Batch Results</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {[
+              { label: 'Total Processed', value: summary.total_processed,       color: 'var(--text-primary)', border: 'var(--border-muted)' },
+              { label: 'Fraud Flagged',   value: summary.fraud_detected_count,  color: '#f87171',             border: 'var(--danger-border)' },
+              { label: 'High Risk',       value: summary.high_risk_count,       color: '#fbbf24',             border: 'var(--warning-border)' },
+              { label: 'Low Risk',        value: summary.low_risk_count,        color: '#34d399',             border: 'var(--success-border)' },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="metric-block"
+                style={{ borderColor: item.border }}
+              >
+                <div className="text-xs-caps" style={{ marginBottom: 8 }}>{item.label}</div>
+                <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: item.color }}>{item.value}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}

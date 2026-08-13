@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Radio, Play, Square, AlertTriangle, Activity } from 'lucide-react';
+import { Radio, Play, Square, Activity } from 'lucide-react';
 import { controlSimulator, fetchSimulatorStatus, SimulatorStatus } from '../api/client';
 
 export const SimulatorControlView: React.FC = () => {
-  const [status, setStatus] = useState<SimulatorStatus | null>(null);
+  const [status,  setStatus]  = useState<SimulatorStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const loadStatus = async () => {
-    try {
-      const res = await fetchSimulatorStatus();
-      setStatus(res);
-    } catch (err) {
-      console.error(err);
-    }
+    try { setStatus(await fetchSimulatorStatus()); }
+    catch (err) { console.error(err); }
   };
 
   useEffect(() => {
@@ -26,71 +22,83 @@ export const SimulatorControlView: React.FC = () => {
     setLoading(true);
     try {
       const action = status.is_running ? 'stop' : 'start';
-      const updated = await controlSimulator(action, 1.5);
-      setStatus(updated);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      setStatus(await controlSimulator(action, 1.5));
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
+  const isRunning = status?.is_running ?? false;
+
   return (
-    <div className="glass-card p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-tr from-rose-500/20 to-amber-500/20 border border-rose-500/30 text-rose-400">
-            <Radio className="w-6 h-6 animate-pulse" />
+    <div className="card" style={{ padding: 24 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className={`section-icon ${isRunning ? 'danger' : 'muted'}`}>
+            <Radio size={16} style={{ animation: isRunning ? 'pulse 1.5s ease-in-out infinite' : 'none' }} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Real-Time Transaction Stream Simulator</h3>
-            <p className="text-xs text-slate-400">Streams synthetic live transaction scoring requests to simulate real-world production traffic</p>
+            <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>Live Transaction Simulator</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+              Streams synthetic scoring requests to simulate production traffic
+            </div>
           </div>
         </div>
 
         <button
           onClick={handleToggle}
           disabled={loading}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all shadow-lg ${
-            status?.is_running
-              ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/25'
-              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25'
-          }`}
+          className={isRunning ? 'btn-danger' : 'btn-success'}
         >
-          {status?.is_running ? (
-            <>
-              <Square className="w-4 h-4" />
-              <span>Stop Simulator</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              <span>Start Live Stream</span>
-            </>
-          )}
+          {isRunning
+            ? <><Square size={13} /> Stop Simulator</>
+            : <><Play  size={13} /> Start Stream</>
+          }
         </button>
       </div>
 
-      {/* Simulator Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <span className="text-xs text-slate-400 font-mono">Stream Status</span>
-          <div className="flex items-center space-x-2 mt-1">
-            <span className={`inline-block w-2.5 h-2.5 rounded-full ${status?.is_running ? 'bg-emerald-400 animate-ping' : 'bg-slate-600'}`} />
-            <span className="text-lg font-bold text-white uppercase">{status?.is_running ? 'Streaming' : 'Idle'}</span>
+      <hr className="divider" style={{ marginBottom: 20 }} />
+
+      {/* Metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div className="metric-block">
+          <div className="text-xs-caps" style={{ marginBottom: 10 }}>Stream Status</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {isRunning ? (
+              <>
+                <span className="pulse-dot" />
+                <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: '#34d399' }}>STREAMING</span>
+              </>
+            ) : (
+              <>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-faint)', display: 'inline-block' }} />
+                <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)' }}>IDLE</span>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <span className="text-xs text-slate-400 font-mono">Simulated Transactions</span>
-          <p className="text-2xl font-extrabold text-cyan-400 mt-1 font-mono">{status?.total_simulated_transactions || 0}</p>
+        <div className="metric-block">
+          <div className="text-xs-caps" style={{ marginBottom: 10 }}>Simulated Transactions</div>
+          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: '#93c5fd' }}>
+            {status?.total_simulated_transactions || 0}
+          </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-rose-500/30">
-          <span className="text-xs text-rose-400 font-mono">Real-Time Alerts Raised</span>
-          <p className="text-2xl font-extrabold text-rose-400 mt-1 font-mono">{status?.fraud_alerts_generated || 0}</p>
+        <div className="metric-block" style={{ borderColor: 'var(--danger-border)' }}>
+          <div className="text-xs-caps" style={{ marginBottom: 10, color: '#f87171' }}>Fraud Alerts Raised</div>
+          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: '#f87171' }}>
+            {status?.fraud_alerts_generated || 0}
+          </div>
         </div>
       </div>
+
+      {isRunning && (
+        <div className="fade-in" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+          <Activity size={12} color="#34d399" />
+          <span>Simulator actively generating and scoring transactions — auto-refreshes every 2 seconds.</span>
+        </div>
+      )}
     </div>
   );
 };

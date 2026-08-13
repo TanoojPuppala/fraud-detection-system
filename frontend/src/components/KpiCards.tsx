@@ -1,70 +1,79 @@
 import React from 'react';
-import { CreditCard, AlertTriangle, ShieldCheck, DollarSign } from 'lucide-react';
+import { CreditCard, AlertTriangle, ShieldOff, TrendingUp } from 'lucide-react';
 import { SystemStats } from '../api/client';
 
 interface KpiCardsProps {
   stats: SystemStats | null;
 }
 
-export const KpiCards: React.FC<KpiCardsProps> = ({ stats }) => {
-  const cards = [
-    {
-      title: 'Total Transactions Scored',
-      value: stats ? stats.total_transactions.toLocaleString() : '0',
-      icon: CreditCard,
-      color: 'from-cyan-500/20 to-blue-600/20',
-      borderColor: 'border-cyan-500/30',
-      iconColor: 'text-cyan-400',
-    },
-    {
-      title: 'Fraud Cases Flagged',
-      value: stats ? stats.total_fraud_detected.toLocaleString() : '0',
-      subtext: stats ? `${stats.fraud_percentage}% Fraud Rate` : '0%',
-      icon: AlertTriangle,
-      color: 'from-rose-500/20 to-pink-600/20',
-      borderColor: 'border-rose-500/30',
-      iconColor: 'text-rose-400',
-    },
-    {
-      title: 'High-Risk Alerts',
-      value: stats ? (stats.risk_distribution?.High || 0).toLocaleString() : '0',
-      subtext: 'Requires Immediate Action',
-      icon: ShieldCheck,
-      color: 'from-amber-500/20 to-orange-600/20',
-      borderColor: 'border-amber-500/30',
-      iconColor: 'text-amber-400',
-    },
-    {
-      title: 'Estimated Financial Cost Saved',
-      value: stats ? `$${stats.total_estimated_cost_saved_usd.toLocaleString()}` : '$0',
-      subtext: '$500 Loss per Fraud Caught',
-      icon: DollarSign,
-      color: 'from-emerald-500/20 to-teal-600/20',
-      borderColor: 'border-emerald-500/30',
-      iconColor: 'text-emerald-400',
-    },
-  ];
+const cards = (stats: SystemStats | null) => [
+  {
+    title: 'Transactions Scored',
+    value: stats ? stats.total_transactions.toLocaleString() : '—',
+    icon: CreditCard,
+    iconClass: 'muted',
+    trend: null,
+  },
+  {
+    title: 'Fraud Flagged',
+    value: stats ? stats.total_fraud_detected.toLocaleString() : '—',
+    sub: stats ? `${stats.fraud_percentage}% fraud rate` : null,
+    icon: AlertTriangle,
+    iconClass: 'danger',
+    trend: 'danger',
+  },
+  {
+    title: 'High-Risk Alerts',
+    value: stats ? (stats.risk_distribution?.High || 0).toLocaleString() : '—',
+    sub: 'Requires action',
+    icon: ShieldOff,
+    iconClass: 'warning',
+    trend: 'warning',
+  },
+  {
+    title: 'Cost Savings Est.',
+    value: stats ? `$${stats.total_estimated_cost_saved_usd.toLocaleString()}` : '—',
+    sub: '$500 per fraud caught',
+    icon: TrendingUp,
+    iconClass: 'success',
+    trend: 'success',
+  },
+];
 
+const trendColors: Record<string, string> = {
+  danger:  '#f87171',
+  warning: '#fbbf24',
+  success: '#34d399',
+};
+
+export const KpiCards: React.FC<KpiCardsProps> = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      {cards.map((card, idx) => {
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+      {cards(stats).map((card, idx) => {
         const Icon = card.icon;
+        const valueColor = card.trend ? trendColors[card.trend] : 'var(--text-primary)';
         return (
           <div
             key={idx}
-            className={`glass-card p-5 border ${card.borderColor} bg-gradient-to-br ${card.color} relative overflow-hidden`}
+            className="card card-hover fade-in"
+            style={{ padding: '18px 20px', animationDelay: `${idx * 50}ms` }}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{card.title}</span>
-              <div className={`p-2 rounded-xl bg-slate-900/80 border border-slate-800 ${card.iconColor}`}>
-                <Icon className="w-5 h-5" />
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span className="text-xs-caps">{card.title}</span>
+              <div className={`section-icon ${card.iconClass}`} style={{ width: 32, height: 32, borderRadius: 8 }}>
+                <Icon size={14} />
               </div>
             </div>
 
-            <div className="mt-4">
-              <h3 className="text-2xl font-extrabold text-white tracking-tight">{card.value}</h3>
-              {card.subtext && <p className="text-xs text-slate-400 mt-1 font-mono">{card.subtext}</p>}
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 26, fontWeight: 700, color: valueColor, lineHeight: 1 }}>
+              {card.value}
             </div>
+
+            {card.sub && (
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, fontFamily: 'JetBrains Mono, monospace' }}>
+                {card.sub}
+              </div>
+            )}
           </div>
         );
       })}

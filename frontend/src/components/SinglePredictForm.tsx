@@ -1,28 +1,21 @@
 import React, { useState } from 'react';
-import { Zap, AlertTriangle, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react';
+import { Zap, ShieldAlert, CheckCircle2, Sparkles } from 'lucide-react';
 import { predictTransaction, PredictionResult } from '../api/client';
 import { ShapWaterfall } from './ShapWaterfall';
 
 export const SinglePredictForm: React.FC = () => {
   const [amount, setAmount] = useState<number>(1250.0);
-  const [time, setTime] = useState<number>(406.0);
-  const [v14, setV14] = useState<number>(-4.2);
-  const [v10, setV10] = useState<number>(-2.8);
+  const [time,   setTime]   = useState<number>(406.0);
+  const [v14,    setV14]    = useState<number>(-4.2);
+  const [v10,    setV10]    = useState<number>(-2.8);
   const [loading, setLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<PredictionResult | null>(null);
+  const [result,  setResult]  = useState<PredictionResult | null>(null);
 
-  // Preset scenarios
   const setPreset = (type: 'fraud' | 'legit') => {
     if (type === 'fraud') {
-      setAmount(2800.5);
-      setTime(406.0);
-      setV14(-5.8);
-      setV10(-3.9);
+      setAmount(2800.5); setTime(406.0); setV14(-5.8); setV10(-3.9);
     } else {
-      setAmount(45.2);
-      setTime(12500.0);
-      setV14(0.2);
-      setV10(0.1);
+      setAmount(45.2); setTime(12500.0); setV14(0.2); setV10(0.1);
     }
   };
 
@@ -30,14 +23,12 @@ export const SinglePredictForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
-
     const txData: Record<string, number> = { time, amount };
     for (let i = 1; i <= 28; i++) {
-      if (i === 14) txData[`v14`] = v14;
-      else if (i === 10) txData[`v10`] = v10;
+      if (i === 14) txData['v14'] = v14;
+      else if (i === 10) txData['v10'] = v10;
       else txData[`v${i}`] = 0.05 * (i % 2 === 0 ? 1 : -1);
     }
-
     try {
       const res = await predictTransaction(txData);
       setResult(res);
@@ -48,102 +39,105 @@ export const SinglePredictForm: React.FC = () => {
     }
   };
 
+  const riskColor =
+    result?.risk_band === 'High'   ? 'danger'  :
+    result?.risk_band === 'Medium' ? 'warning' : 'success';
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Form Container */}
-      <div className="lg:col-span-7 glass-card p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-400">
-              <Zap className="w-5 h-5" />
+    <div style={{ display: 'grid', gridTemplateColumns: '7fr 5fr', gap: 16 }}>
+
+      {/* ── Form ── */}
+      <div className="card" style={{ padding: 24 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="section-icon">
+              <Zap size={16} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Single Transaction Real-Time Scoring</h3>
-              <p className="text-xs text-slate-400">Submit parameters to evaluate production model decision risk band</p>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+                Single Transaction Scoring
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                Evaluate real-time fraud risk via production model
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPreset('legit')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
-            >
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-preset-legit" type="button" onClick={() => setPreset('legit')}>
               Legit Preset
             </button>
-            <button
-              type="button"
-              onClick={() => setPreset('fraud')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20"
-            >
+            <button className="btn-preset-fraud" type="button" onClick={() => setPreset('fraud')}>
               Fraud Preset
             </button>
           </div>
         </div>
 
-        <form onSubmit={handlePredict} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <hr className="divider" style={{ marginBottom: 20 }} />
+
+        {/* Form Fields */}
+        <form onSubmit={handlePredict}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Amount ($)</label>
+              <label className="form-label">Amount ($)</label>
               <input
+                className="form-input"
                 type="number"
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(parseFloat(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
+                placeholder="e.g. 1250.00"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Time Elapsed (s)</label>
+              <label className="form-label">Time Elapsed (s)</label>
               <input
+                className="form-input"
                 type="number"
                 step="1"
                 value={time}
                 onChange={(e) => setTime(parseFloat(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
+                placeholder="e.g. 406"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }}>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                Feature V14 <span className="text-cyan-400 text-[10px]">(Top Fraud Import)</span>
+              <label className="form-label">
+                Feature V14 <span style={{ color: '#93c5fd', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(Top fraud indicator)</span>
               </label>
               <input
+                className="form-input"
                 type="number"
                 step="0.1"
                 value={v14}
                 onChange={(e) => setV14(parseFloat(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
+                placeholder="e.g. -4.2"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                Feature V10 <span className="text-cyan-400 text-[10px]">(2nd Import)</span>
+              <label className="form-label">
+                Feature V10 <span style={{ color: '#93c5fd', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(2nd indicator)</span>
               </label>
               <input
+                className="form-input"
                 type="number"
                 step="0.1"
                 value={v10}
                 onChange={(e) => setV10(parseFloat(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
+                placeholder="e.g. -2.8"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center space-x-2 transition-all"
-          >
+          <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', padding: '11px 20px' }}>
             {loading ? (
-              <span>Evaluating Risk Band...</span>
+              <span>Evaluating risk band…</span>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles size={14} />
                 <span>Evaluate Transaction Risk</span>
               </>
             )}
@@ -151,64 +145,71 @@ export const SinglePredictForm: React.FC = () => {
         </form>
       </div>
 
-      {/* Result Container */}
-      <div className="lg:col-span-5 glass-card p-6 flex flex-col justify-between">
+      {/* ── Result Panel ── */}
+      <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
         {result ? (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-mono">Prediction Outcome</span>
-              <span className="text-xs text-slate-500 font-mono">ID #{result.prediction_id}</span>
+          <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
+            {/* Prediction ID header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="text-xs-caps">Prediction Outcome</span>
+              <span className="mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                ID #{result.prediction_id}
+              </span>
             </div>
 
-            {/* Risk Gauge Header */}
-            <div className="text-center py-3">
-              <div
-                className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full font-extrabold text-sm border ${
-                  result.risk_band === 'High'
-                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 shadow-lg shadow-rose-500/20'
-                    : result.risk_band === 'Medium'
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                    : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                }`}
-              >
-                {result.risk_band === 'High' ? (
-                  <ShieldAlert className="w-5 h-5" />
-                ) : (
-                  <CheckCircle2 className="w-5 h-5" />
-                )}
-                <span>RISK BAND: {result.risk_band.toUpperCase()}</span>
-              </div>
+            <hr className="divider" />
 
-              <div className="mt-3">
-                <span className="text-3xl font-extrabold text-white font-mono">
-                  {(result.raw_probability * 100).toFixed(2)}%
+            {/* Risk band */}
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {result.risk_band === 'High'
+                  ? <ShieldAlert size={18} color="#f87171" />
+                  : <CheckCircle2 size={18} color="#34d399" />
+                }
+                <span className={`badge badge-${riskColor === 'danger' ? 'high' : riskColor === 'warning' ? 'med' : 'low'}`}
+                  style={{ fontSize: 12, padding: '4px 12px' }}>
+                  {result.risk_band} Risk
                 </span>
-                <p className="text-xs text-slate-400 mt-1">Raw Model Fraud Probability</p>
+              </div>
+
+              <div className="mono" style={{ fontSize: 34, fontWeight: 700, color: 'var(--text-primary)', marginTop: 12, lineHeight: 1 }}>
+                {(result.raw_probability * 100).toFixed(2)}%
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+                Raw fraud probability
               </div>
             </div>
 
-            {/* Metrics Breakdown */}
-            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono">
-              <div>
-                <span className="text-slate-500">Inference Latency:</span>
-                <p className="text-slate-200 font-semibold">{result.inference_time_ms.toFixed(2)} ms</p>
+            {/* Metrics */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="metric-block">
+                <div className="text-xs-caps" style={{ marginBottom: 4 }}>Latency</div>
+                <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {result.inference_time_ms.toFixed(2)} ms
+                </div>
               </div>
-              <div>
-                <span className="text-slate-500">Decision Threshold:</span>
-                <p className="text-slate-200 font-semibold">{result.decision_threshold}</p>
+              <div className="metric-block">
+                <div className="text-xs-caps" style={{ marginBottom: 4 }}>Threshold</div>
+                <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {result.decision_threshold}
+                </div>
               </div>
             </div>
 
-            {/* SHAP Waterfall */}
+            {/* SHAP */}
             {result.top_shap_features && <ShapWaterfall features={result.top_shap_features} />}
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-slate-600">
-              <Zap className="w-8 h-8" />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, padding: 32 }}>
+            <div className="section-icon muted" style={{ width: 48, height: 48, borderRadius: 12 }}>
+              <Zap size={20} />
             </div>
-            <h4 className="text-sm font-semibold text-slate-300">Ready for Transaction Scoring</h4>
-            <p className="text-xs text-slate-500">Enter transaction parameters and submit to view instant fraud probability and SHAP explanations.</p>
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-secondary)' }}>
+              Ready for Transaction Scoring
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 220, lineHeight: 1.6 }}>
+              Enter parameters and submit to view fraud probability and SHAP explanations.
+            </div>
           </div>
         )}
       </div>

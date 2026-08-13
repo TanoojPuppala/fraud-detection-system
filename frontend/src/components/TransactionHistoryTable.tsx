@@ -5,7 +5,7 @@ import { fetchTransactionHistory } from '../api/client';
 export const TransactionHistoryTable: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [filter, setFilter] = useState<string>('All');
+  const [filter,  setFilter]  = useState<string>('All');
 
   const loadHistory = async () => {
     setLoading(true);
@@ -19,30 +19,28 @@ export const TransactionHistoryTable: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadHistory();
-  }, [filter]);
+  useEffect(() => { loadHistory(); }, [filter]);
 
   return (
-    <div className="glass-card p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400">
-            <History className="w-5 h-5" />
+    <div className="card" style={{ padding: 24 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="section-icon">
+            <History size={16} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Transaction Audit Log</h3>
-            <p className="text-xs text-slate-400">Real-time persistent audit trail of scored transactions</p>
+            <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>Transaction Audit Log</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Real-time persistent audit trail</div>
           </div>
         </div>
 
-        {/* Filter Dropdown */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-slate-500" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Filter size={13} color="var(--text-muted)" />
           <select
+            className="form-select"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono px-3 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500"
           >
             <option value="All">All Risk Bands</option>
             <option value="High">High Risk</option>
@@ -52,61 +50,62 @@ export const TransactionHistoryTable: React.FC = () => {
         </div>
       </div>
 
+      <hr className="divider" style={{ marginBottom: 0 }} />
+
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs font-mono">
-          <thead className="bg-slate-900/80 text-slate-400 border-b border-slate-800 uppercase font-semibold">
+      <div style={{ overflowX: 'auto' }}>
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Pred ID</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Raw Prob</th>
-              <th className="px-4 py-3">Risk Band</th>
-              <th className="px-4 py-3">Outcome</th>
-              <th className="px-4 py-3">Latency</th>
-              <th className="px-4 py-3">Timestamp</th>
+              <th>Pred ID</th>
+              <th>Amount</th>
+              <th>Raw Prob</th>
+              <th>Risk Band</th>
+              <th>Outcome</th>
+              <th>Latency</th>
+              <th>Timestamp</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">Loading audit log...</td>
+                <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0' }}>
+                  Loading audit log…
+                </td>
               </tr>
             ) : history.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">No scored transactions found.</td>
+                <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0' }}>
+                  No scored transactions found.
+                </td>
               </tr>
             ) : (
               history.map((row) => (
-                <tr key={row.prediction_id} className="hover:bg-slate-900/50 transition-colors">
-                  <td className="px-4 py-3 text-slate-300 font-bold">#{row.prediction_id}</td>
-                  <td className="px-4 py-3 font-bold text-white">${row.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-cyan-400 font-bold">{(row.raw_probability * 100).toFixed(2)}%</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded font-bold text-[10px] ${
-                        row.risk_band === 'High'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                          : row.risk_band === 'Medium'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      }`}
-                    >
+                <tr key={row.prediction_id}>
+                  <td style={{ color: 'var(--text-muted)', fontWeight: 500 }}>#{row.prediction_id}</td>
+                  <td style={{ fontWeight: 600 }}>${row.amount.toFixed(2)}</td>
+                  <td style={{ color: '#93c5fd', fontWeight: 600 }}>{(row.raw_probability * 100).toFixed(2)}%</td>
+                  <td>
+                    <span className={`badge ${
+                      row.risk_band === 'High' ? 'badge-high' :
+                      row.risk_band === 'Medium' ? 'badge-med' : 'badge-low'
+                    }`}>
                       {row.risk_band}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     {row.is_fraud ? (
-                      <span className="flex items-center gap-1 text-rose-400 font-bold">
-                        <AlertOctagon className="w-3.5 h-3.5" /> FRAUD
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#f87171', fontWeight: 600 }}>
+                        <AlertOctagon size={12} /> FRAUD
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                        <CheckCircle className="w-3.5 h-3.5" /> LEGIT
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#34d399', fontWeight: 600 }}>
+                        <CheckCircle size={12} /> LEGIT
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{row.inference_time_ms.toFixed(2)} ms</td>
-                  <td className="px-4 py-3 text-slate-500">{new Date(row.created_at).toLocaleTimeString()}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{row.inference_time_ms.toFixed(2)} ms</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{new Date(row.created_at).toLocaleTimeString()}</td>
                 </tr>
               ))
             )}
