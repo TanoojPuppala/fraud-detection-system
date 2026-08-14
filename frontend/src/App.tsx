@@ -61,16 +61,6 @@ export const App: React.FC = () => {
             </>
           )}
 
-          {activeTab === 'history' && (
-            <>
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Transaction Audit Log</h2>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0' }}>Persistent audit trail of all scored transactions</p>
-              </div>
-              <TransactionHistoryTable />
-            </>
-          )}
-
           {activeTab === 'analytics' && (
             <>
               <div>

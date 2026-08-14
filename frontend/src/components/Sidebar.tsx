@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, UploadCloud, History, BarChart3, Radio } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, BarChart3, Radio } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -9,7 +9,6 @@ interface SidebarProps {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'batch',     label: 'Batch CSV',        icon: UploadCloud },
-  { id: 'history',   label: 'Audit Log',        icon: History },
   { id: 'analytics', label: 'Model Benchmark',  icon: BarChart3 },
   { id: 'simulator', label: 'Live Simulator',   icon: Radio },
 ];
