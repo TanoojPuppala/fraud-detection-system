@@ -3,8 +3,15 @@ FastAPI Application Entrypoint for Fraud Detection & Financial Risk Analysis Sys
 Serves both REST API endpoints (/api/v1) and Unified React Frontend UI (/).
 """
 
+import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
+
+# Ensure repository root is on sys.path for direct script execution
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +24,6 @@ from backend.app.db.models import User
 from backend.app.core.security import get_password_hash
 from backend.app.api.v1.router import api_router
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DIST_DIR = BASE_DIR / "frontend" / "dist"
 
 # Initialize Database Tables
@@ -93,3 +99,8 @@ else:
             "version": settings.VERSION,
             "api_v1": settings.API_V1_STR
         }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
