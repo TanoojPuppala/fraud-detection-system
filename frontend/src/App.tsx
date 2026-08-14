@@ -51,16 +51,6 @@ export const App: React.FC = () => {
             </>
           )}
 
-          {activeTab === 'predict' && (
-            <>
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Single Transaction Scoring</h2>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0' }}>Evaluate individual transactions against the production model</p>
-              </div>
-              <SinglePredictForm />
-            </>
-          )}
-
           {activeTab === 'batch' && (
             <>
               <div>
