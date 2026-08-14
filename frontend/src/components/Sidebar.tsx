@@ -57,16 +57,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                 borderRadius: 8,
                 border: isActive ? '1px solid var(--accent-border)' : '1px solid transparent',
                 background: isActive ? 'var(--accent-subtle)' : 'transparent',
-                color: isActive ? '#93c5fd' : 'var(--text-secondary)',
+                color: isActive ? 'var(--accent-hover)' : 'var(--text-secondary)',
                 fontSize: 13,
-                fontWeight: isActive ? 600 : 400,
+                fontWeight: isActive ? 600 : 500,
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)';
                   (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)';
                 }
               }}
@@ -78,8 +78,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               }}
             >
               <Icon
-                size={15}
-                style={{ color: isActive ? '#93c5fd' : 'var(--text-faint)', flexShrink: 0 }}
+                size={16}
+                style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)', flexShrink: 0 }}
               />
               <span>{item.label}</span>
             </button>

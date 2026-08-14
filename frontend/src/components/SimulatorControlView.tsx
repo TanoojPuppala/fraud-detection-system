@@ -67,7 +67,7 @@ export const SimulatorControlView: React.FC = () => {
             {isRunning ? (
               <>
                 <span className="pulse-dot" />
-                <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: '#34d399' }}>STREAMING</span>
+                <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: '#16a34a' }}>STREAMING</span>
               </>
             ) : (
               <>
@@ -80,14 +80,14 @@ export const SimulatorControlView: React.FC = () => {
 
         <div className="metric-block">
           <div className="text-xs-caps" style={{ marginBottom: 10 }}>Simulated Transactions</div>
-          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: '#93c5fd' }}>
+          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>
             {status?.total_simulated_transactions || 0}
           </div>
         </div>
 
-        <div className="metric-block" style={{ borderColor: 'var(--danger-border)' }}>
-          <div className="text-xs-caps" style={{ marginBottom: 10, color: '#f87171' }}>Fraud Alerts Raised</div>
-          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: '#f87171' }}>
+        <div className="metric-block" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-subtle)' }}>
+          <div className="text-xs-caps" style={{ marginBottom: 10, color: '#dc2626' }}>Fraud Alerts Raised</div>
+          <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: '#dc2626' }}>
             {status?.fraud_alerts_generated || 0}
           </div>
         </div>
@@ -95,7 +95,7 @@ export const SimulatorControlView: React.FC = () => {
 
       {isRunning && (
         <div className="fade-in" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-muted)' }}>
-          <Activity size={12} color="#34d399" />
+          <Activity size={12} color="#16a34a" />
           <span>Simulator actively generating and scoring transactions — auto-refreshes every 2 seconds.</span>
         </div>
       )}

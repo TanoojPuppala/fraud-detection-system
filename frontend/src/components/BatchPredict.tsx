@@ -50,10 +50,10 @@ export const BatchPredict: React.FC = () => {
           alignItems: 'center',
           gap: 14,
           padding: '40px 24px',
-          border: '1.5px dashed rgba(255,255,255,0.12)',
+          border: '1.5px dashed var(--border-subtle)',
           borderRadius: 12,
           cursor: 'pointer',
-          background: 'var(--bg-surface)',
+          background: 'var(--bg-app)',
           transition: 'border-color 0.2s, background 0.2s',
           textAlign: 'center',
         }}
@@ -62,8 +62,8 @@ export const BatchPredict: React.FC = () => {
           (e.currentTarget as HTMLLabelElement).style.background = 'var(--accent-subtle)';
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLLabelElement).style.borderColor = 'rgba(255,255,255,0.12)';
-          (e.currentTarget as HTMLLabelElement).style.background = 'var(--bg-surface)';
+          (e.currentTarget as HTMLLabelElement).style.borderColor = 'var(--border-subtle)';
+          (e.currentTarget as HTMLLabelElement).style.background = 'var(--bg-app)';
         }}
       >
         <input
@@ -105,15 +105,15 @@ export const BatchPredict: React.FC = () => {
           <div className="text-xs-caps" style={{ marginBottom: 14 }}>Batch Results</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             {[
-              { label: 'Total Processed', value: summary.total_processed,       color: 'var(--text-primary)', border: 'var(--border-muted)' },
-              { label: 'Fraud Flagged',   value: summary.fraud_detected_count,  color: '#f87171',             border: 'var(--danger-border)' },
-              { label: 'High Risk',       value: summary.high_risk_count,       color: '#fbbf24',             border: 'var(--warning-border)' },
-              { label: 'Low Risk',        value: summary.low_risk_count,        color: '#34d399',             border: 'var(--success-border)' },
+              { label: 'Total Processed', value: summary.total_processed,       color: 'var(--text-primary)', border: 'var(--border-muted)',  bg: 'var(--bg-app)' },
+              { label: 'Fraud Flagged',   value: summary.fraud_detected_count,  color: '#dc2626',             border: 'var(--danger-border)',  bg: 'var(--danger-subtle)' },
+              { label: 'High Risk',       value: summary.high_risk_count,       color: '#d97706',             border: 'var(--warning-border)', bg: 'var(--warning-subtle)' },
+              { label: 'Low Risk',        value: summary.low_risk_count,        color: '#16a34a',             border: 'var(--success-border)', bg: 'var(--success-subtle)' },
             ].map((item, i) => (
               <div
                 key={i}
                 className="metric-block"
-                style={{ borderColor: item.border }}
+                style={{ borderColor: item.border, background: item.bg }}
               >
                 <div className="text-xs-caps" style={{ marginBottom: 8 }}>{item.label}</div>
                 <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: item.color }}>{item.value}</div>

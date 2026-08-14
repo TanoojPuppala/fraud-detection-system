@@ -31,8 +31,8 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({ features }) => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {isPositive
-                    ? <TrendingUp size={11} color="#f87171" />
-                    : <TrendingDown size={11} color="#34d399" />
+                    ? <TrendingUp size={12} color="#dc2626" />
+                    : <TrendingDown size={12} color="#16a34a" />
                   }
                   <span className="mono" style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>
                     {feat.feature}
@@ -43,7 +43,7 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({ features }) => {
                 </div>
                 <span
                   className="mono"
-                  style={{ fontSize: 11, fontWeight: 600, color: isPositive ? '#f87171' : '#34d399' }}
+                  style={{ fontSize: 11, fontWeight: 600, color: isPositive ? '#dc2626' : '#16a34a' }}
                 >
                   {isPositive ? '+' : ''}{feat.shap_value.toFixed(4)}
                 </span>
@@ -56,8 +56,8 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({ features }) => {
                   style={{
                     width: `${pct * 100}%`,
                     background: isPositive
-                      ? 'linear-gradient(90deg, #dc2626, #f87171)'
-                      : 'linear-gradient(90deg, #059669, #34d399)',
+                      ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                      : 'linear-gradient(90deg, #22c55e, #16a34a)',
                   }}
                 />
               </div>

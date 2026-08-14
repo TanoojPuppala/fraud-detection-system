@@ -83,8 +83,8 @@ export const TransactionHistoryTable: React.FC = () => {
               history.map((row) => (
                 <tr key={row.prediction_id}>
                   <td style={{ color: 'var(--text-muted)', fontWeight: 500 }}>#{row.prediction_id}</td>
-                  <td style={{ fontWeight: 600 }}>${row.amount.toFixed(2)}</td>
-                  <td style={{ color: '#93c5fd', fontWeight: 600 }}>{(row.raw_probability * 100).toFixed(2)}%</td>
+                  <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>${row.amount.toFixed(2)}</td>
+                  <td style={{ color: 'var(--accent)', fontWeight: 600 }}>{(row.raw_probability * 100).toFixed(2)}%</td>
                   <td>
                     <span className={`badge ${
                       row.risk_band === 'High' ? 'badge-high' :
@@ -95,11 +95,11 @@ export const TransactionHistoryTable: React.FC = () => {
                   </td>
                   <td>
                     {row.is_fraud ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#f87171', fontWeight: 600 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#dc2626', fontWeight: 600 }}>
                         <AlertOctagon size={12} /> FRAUD
                       </span>
                     ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#34d399', fontWeight: 600 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#16a34a', fontWeight: 600 }}>
                         <CheckCircle size={12} /> LEGIT
                       </span>
                     )}

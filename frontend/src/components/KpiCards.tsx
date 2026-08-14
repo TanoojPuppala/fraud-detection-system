@@ -41,9 +41,9 @@ const cards = (stats: SystemStats | null) => [
 ];
 
 const trendColors: Record<string, string> = {
-  danger:  '#f87171',
-  warning: '#fbbf24',
-  success: '#34d399',
+  danger:  '#dc2626',
+  warning: '#d97706',
+  success: '#16a34a',
 };
 
 export const KpiCards: React.FC<KpiCardsProps> = ({ stats }) => {

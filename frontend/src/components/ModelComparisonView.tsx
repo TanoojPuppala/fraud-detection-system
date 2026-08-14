@@ -24,15 +24,15 @@ export const ModelComparisonView: React.FC = () => {
       {/* Champion Banner */}
       <div className="card fade-in" style={{
         padding: 20,
-        border: '1px solid var(--success-border)',
-        background: 'linear-gradient(135deg, rgba(16,185,129,0.07) 0%, var(--bg-card) 100%)',
+        border: '1px solid #a7f3d0',
+        background: 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
           <div className="section-icon success" style={{ width: 44, height: 44, borderRadius: 12 }}>
             <Trophy size={20} />
           </div>
           <div style={{ flex: 1 }}>
-            <div className="text-xs-caps" style={{ color: '#34d399', marginBottom: 4 }}>
+            <div className="text-xs-caps" style={{ color: '#059669', marginBottom: 4 }}>
               Production Deployment Champion
             </div>
             <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', marginBottom: 6 }}>
@@ -40,7 +40,7 @@ export const ModelComparisonView: React.FC = () => {
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: 640 }}>
               Selected via cost-aware financial evaluation — total cost{' '}
-              <strong style={{ color: '#34d399', fontFamily: 'JetBrains Mono, monospace' }}>
+              <strong style={{ color: '#047857', fontFamily: 'JetBrains Mono, monospace' }}>
                 ${info?.metadata?.metrics?.['Total Business Cost ($)'] || '9,770'}
               </strong>{' '}
               vs $10,595 for XGBoost. Minimizes catastrophic false negatives ($500/fraud caught).
@@ -65,7 +65,7 @@ export const ModelComparisonView: React.FC = () => {
       {/* Benchmark Table */}
       <div className="card fade-in" style={{ padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <BarChart3 size={16} color="#93c5fd" />
+          <BarChart3 size={16} color="var(--accent)" />
           <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
             6-Model Benchmark Matrix
           </span>
@@ -92,20 +92,20 @@ export const ModelComparisonView: React.FC = () => {
                 <tr
                   key={idx}
                   style={{
-                    background: m.champion ? 'rgba(16,185,129,0.05)' : undefined,
+                    background: m.champion ? '#f0fdf4' : undefined,
                     fontWeight: m.champion ? 600 : 400,
                   }}
                 >
                   <td style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
-                    {m.champion && <Award size={12} color="#34d399" />}
+                    {m.champion && <Award size={12} color="#059669" />}
                     {m.name}
                   </td>
-                  <td style={{ color: '#93c5fd' }}>{m.prauc}</td>
-                  <td style={{ color: '#34d399' }}>{m.recall}</td>
+                  <td style={{ color: 'var(--accent)', fontWeight: 600 }}>{m.prauc}</td>
+                  <td style={{ color: '#16a34a', fontWeight: 600 }}>{m.recall}</td>
                   <td style={{ color: 'var(--text-secondary)' }}>{m.precision}</td>
                   <td style={{ color: 'var(--text-secondary)' }}>{m.fp}</td>
-                  <td style={{ color: '#f87171' }}>{m.fn}</td>
-                  <td className="mono" style={{ color: '#fbbf24', fontWeight: 700 }}>{m.cost}</td>
+                  <td style={{ color: '#dc2626', fontWeight: 600 }}>{m.fn}</td>
+                  <td className="mono" style={{ color: '#b45309', fontWeight: 700 }}>{m.cost}</td>
                   <td>
                     {m.champion ? (
                       <span className="badge badge-champion">Champion</span>

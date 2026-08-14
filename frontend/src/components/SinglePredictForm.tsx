@@ -106,7 +106,7 @@ export const SinglePredictForm: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }}>
             <div>
               <label className="form-label">
-                Feature V14 <span style={{ color: '#93c5fd', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(Top fraud indicator)</span>
+                Feature V14 <span style={{ color: 'var(--accent)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>(Top fraud indicator)</span>
               </label>
               <input
                 className="form-input"
@@ -119,7 +119,7 @@ export const SinglePredictForm: React.FC = () => {
             </div>
             <div>
               <label className="form-label">
-                Feature V10 <span style={{ color: '#93c5fd', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(2nd indicator)</span>
+                Feature V10 <span style={{ color: 'var(--accent)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>(2nd indicator)</span>
               </label>
               <input
                 className="form-input"
@@ -163,8 +163,8 @@ export const SinglePredictForm: React.FC = () => {
             <div style={{ textAlign: 'center', padding: '12px 0' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 {result.risk_band === 'High'
-                  ? <ShieldAlert size={18} color="#f87171" />
-                  : <CheckCircle2 size={18} color="#34d399" />
+                  ? <ShieldAlert size={18} color="#dc2626" />
+                  : <CheckCircle2 size={18} color="#16a34a" />
                 }
                 <span className={`badge badge-${riskColor === 'danger' ? 'high' : riskColor === 'warning' ? 'med' : 'low'}`}
                   style={{ fontSize: 12, padding: '4px 12px' }}>
