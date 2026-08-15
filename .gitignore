@@ -33,7 +33,11 @@ venv.bak/
 
 # Database
 database/*.db
+database/*.db-wal
+database/*.db-shm
 *.db
+*.db-wal
+*.db-shm
 
 # Node / Frontend
 node_modules/
