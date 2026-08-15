@@ -6,7 +6,6 @@ import { SinglePredictForm }       from './components/SinglePredictForm';
 import { BatchPredict }            from './components/BatchPredict';
 import { TransactionHistoryTable } from './components/TransactionHistoryTable';
 import { ModelComparisonView }     from './components/ModelComparisonView';
-import { SimulatorControlView }    from './components/SimulatorControlView';
 import { fetchSystemStats, SystemStats } from './api/client';
 
 export const App: React.FC = () => {
@@ -68,16 +67,6 @@ export const App: React.FC = () => {
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0' }}>Comparative analysis across all evaluated model variants</p>
               </div>
               <ModelComparisonView />
-            </>
-          )}
-
-          {activeTab === 'simulator' && (
-            <>
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Real-Time Simulator</h2>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0' }}>Synthetic live transaction stream to simulate production traffic</p>
-              </div>
-              <SimulatorControlView />
             </>
           )}
 
