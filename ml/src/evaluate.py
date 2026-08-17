@@ -1,9 +1,12 @@
 """
-Comprehensive Evaluation Script for All 5 Models.
+Comprehensive Evaluation Script for Deep Learning Architecture (PyTorch DNN & Autoencoders).
 
-Loads trained models (3 Logistic Regression variants, 1 XGBoost variant, 1 PyTorch DNN variant),
-evaluates them on the shared test set, outputs a combined comparison CSV, and
-generates an overlaid PR-Curve plot across all 5 models.
+Loads trained Deep Learning models:
+1. PyTorch Deep Neural Network (Supervised Layer)
+2. PyTorch Deep Autoencoder (Unsupervised Anomaly Detection Layer)
+
+Evaluates both on the held-out test set, outputs the comparison CSV, and
+generates an overlaid PR-Curve plot.
 """
 
 from pathlib import Path
@@ -26,6 +29,7 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     precision_recall_curve,
+    accuracy_score,
 )
 
 # Ensure UTF-8 console output for Windows
@@ -45,48 +49,25 @@ FIGURES_DIR = Path("ml/reports/figures")
 # ── PyTorch Neural Network Definition ──────────────────────────────────────────
 class FraudDNN(nn.Module):
     """
-    PyTorch Deep Neural Network architecture for Fraud Detection matching trained weights.
+    PyTorch Deep Neural Network architecture for Fraud Detection.
     """
     def __init__(self, input_dim: int = 30):
         super(FraudDNN, self).__init__()
-        
-        self.layer1 = nn.Sequential(
-            nn.Linear(input_dim, 64),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.Dropout(0.3)
-        )
-        self.layer2 = nn.Sequential(
-            nn.Linear(64, 32),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-            nn.Dropout(0.3)
-        )
-        self.layer3 = nn.Sequential(
-            nn.Linear(32, 16),
-            nn.ReLU(),
-            nn.Dropout(0.2)
-        )
-        self.out = nn.Sequential(
-            nn.Linear(16, 1),
-            nn.Sigmoid()
-        )
+        self.layer1 = nn.Sequential(nn.Linear(input_dim, 64), nn.BatchNorm1d(64), nn.ReLU(), nn.Dropout(0.3))
+        self.layer2 = nn.Sequential(nn.Linear(64, 32), nn.BatchNorm1d(32), nn.ReLU(), nn.Dropout(0.3))
+        self.layer3 = nn.Sequential(nn.Linear(32, 16), nn.ReLU(), nn.Dropout(0.2))
+        self.out = nn.Sequential(nn.Linear(16, 1), nn.Sigmoid())
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.out(x)
-        return x
+        return self.out(self.layer3(self.layer2(self.layer1(x))))
 
 
 class FraudAutoencoder(nn.Module):
     """
-    PyTorch Autoencoder architecture for Unsupervised Fraud Anomaly Detection matching trained weights.
+    PyTorch Autoencoder architecture for Unsupervised Fraud Anomaly Detection.
     """
     def __init__(self, input_dim: int = 30):
         super(FraudAutoencoder, self).__init__()
-        
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 20),
             nn.ReLU(),
@@ -95,7 +76,6 @@ class FraudAutoencoder(nn.Module):
             nn.Linear(14, 8),
             nn.ReLU()
         )
-        
         self.decoder = nn.Sequential(
             nn.Linear(8, 14),
             nn.ReLU(),
@@ -105,9 +85,7 @@ class FraudAutoencoder(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        latent = self.encoder(x)
-        reconstruction = self.decoder(latent)
-        return reconstruction
+        return self.decoder(self.encoder(x))
 
 
 def run_evaluation() -> None:
@@ -115,7 +93,7 @@ def run_evaluation() -> None:
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 80)
-    print(" COMPREHENSIVE MODEL EVALUATION BENCHMARK (6 MODELS)")
+    print(" DEEP LEARNING ARCHITECTURE EVALUATION (PYTORCH DNN & AUTOENCODER)")
     print("=" * 80)
 
     # 1. Load Test Set
@@ -124,43 +102,24 @@ def run_evaluation() -> None:
     y_test = joblib.load(PROCESSED_DIR / "y_test.pkl")
     print(f"    Test set size: {len(y_test):,} samples (Fraud cases: {int(y_test.sum())})")
 
-    # Feature Names (Time, V1..V28, Amount)
-    feature_names = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]
-
     # 2. Define Model Variants
     model_configs = [
-        {"name": "Logistic Regression (Baseline)", "file": "logistic_regression_baseline.pkl", "type": "sklearn"},
-        {"name": "Logistic Regression (SMOTE)", "file": "logistic_regression_smote.pkl", "type": "sklearn"},
-        {"name": "Logistic Regression (Undersampled)", "file": "logistic_regression_undersampled.pkl", "type": "sklearn"},
-        {"name": "XGBoost (SMOTE)", "file": "xgboost_smote.pkl", "type": "sklearn"},
         {"name": "PyTorch DNN (SMOTE)", "file": "dnn_smote.pt", "type": "pytorch"},
         {"name": "PyTorch Autoencoder (Baseline)", "file": "autoencoder_baseline.pt", "type": "autoencoder"},
     ]
 
     results = []
-    fig, ax = plt.subplots(figsize=(9, 6))
-
-    xgb_model = None
+    fig, ax = plt.subplots(figsize=(8, 5))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print("\n[2] Evaluating models on held-out test set ...")
+    print("\n[2] Evaluating Deep Learning models on held-out test set ...")
     for config in model_configs:
         model_path = MODELS_DIR / config["file"]
         if not model_path.exists():
             print(f"    [SKIP] Model not found: {model_path}")
             continue
 
-        if config["type"] == "sklearn":
-            clf = joblib.load(model_path)
-            if config["name"] == "XGBoost (SMOTE)":
-                xgb_model = clf
-
-            start_time = time.perf_counter()
-            y_probs = clf.predict_proba(X_test)[:, 1]
-            inference_time_ms = (time.perf_counter() - start_time) * 1000.0
-            y_preds = (y_probs >= 0.5).astype(int)
-
-        elif config["type"] == "pytorch":
+        if config["type"] == "pytorch":
             dnn_model = FraudDNN(input_dim=30).to(device)
             dnn_model.load_state_dict(torch.load(model_path, map_location=device))
             dnn_model.eval()
@@ -193,12 +152,12 @@ def run_evaluation() -> None:
                 recons = recons_tensor.cpu().numpy()
             inference_time_ms = (time.perf_counter() - start_time) * 1000.0
 
-            # Reconstruction error MSE per sample serves as anomaly score
             reconstruction_errors = np.mean((X_test - recons) ** 2, axis=1)
             y_probs = reconstruction_errors
             y_preds = (reconstruction_errors >= threshold).astype(int)
 
         # Compute metrics
+        acc = accuracy_score(y_test, y_preds)
         prec = precision_score(y_test, y_preds, zero_division=0)
         rec = recall_score(y_test, y_preds, zero_division=0)
         f1 = f1_score(y_test, y_preds, zero_division=0)
@@ -208,6 +167,7 @@ def run_evaluation() -> None:
 
         results.append({
             "Model Variant": config["name"],
+            "Accuracy": acc,
             "Precision": prec,
             "Recall": rec,
             "F1-Score": f1,
@@ -225,7 +185,7 @@ def run_evaluation() -> None:
         ax.plot(recall_arr, precision_arr, label=f"{config['name']} (PR-AUC = {pr_auc:.4f})", lw=2)
 
     # 3. Save PR Curve Figure
-    ax.set_title("Precision-Recall Curves — 6 Models Benchmark", fontsize=13, fontweight="bold", pad=12)
+    ax.set_title("Precision-Recall Curves — Deep Learning Benchmark", fontsize=13, fontweight="bold", pad=12)
     ax.set_xlabel("Recall", fontsize=11)
     ax.set_ylabel("Precision", fontsize=11)
     ax.set_xlim([0.0, 1.0])
@@ -235,7 +195,7 @@ def run_evaluation() -> None:
     fig_path = FIGURES_DIR / "all_models_pr_curves.png"
     fig.savefig(fig_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"    Saved 6-model PR-Curve plot -> {fig_path}")
+    print(f"    Saved Deep Learning PR-Curve plot -> {fig_path}")
 
     # 4. Save CSV Reports
     df_results = pd.DataFrame(results)
@@ -244,11 +204,11 @@ def run_evaluation() -> None:
     print(f"    Saved combined comparison CSV -> {csv_all_path}")
 
     # 5. Print Combined Comparison Table
-    print("\n" + "=" * 98)
-    print(" ALL 6 MODELS BENCHMARK PERFORMANCE COMPARISON")
-    print("=" * 98)
+    print("\n" + "=" * 110)
+    print(" DEEP LEARNING BENCHMARK PERFORMANCE COMPARISON")
+    print("=" * 110)
 
-    header = f"{'Model Variant':<38} | {'Precision':>9} | {'Recall':>9} | {'F1-Score':>9} | {'ROC-AUC':>9} | {'PR-AUC':>9} | {'FP':>5} | {'FN':>4}"
+    header = f"{'Model Variant':<35} | {'Accuracy':>8} | {'ROC-AUC':>8} | {'PR-AUC':>8} | {'Precision':>9} | {'Recall':>8} | {'F1-Score':>8} | {'FP':>4} | {'FN':>4}"
     sep = "-" * len(header)
     print("\n" + sep)
     print(header)
@@ -256,65 +216,11 @@ def run_evaluation() -> None:
 
     for r in results:
         print(
-            f"{r['Model Variant']:<38} | {r['Precision']:>9.4f} | {r['Recall']:>9.4f} | "
-            f"{r['F1-Score']:>9.4f} | {r['ROC-AUC']:>9.4f} | {r['PR-AUC']:>9.4f} | "
-            f"{r['FP']:>5} | {r['FN']:>4}"
+            f"{r['Model Variant']:<35} | {r['Accuracy']*100:>7.2f}% | {r['ROC-AUC']:>8.4f} | "
+            f"{r['PR-AUC']:>8.4f} | {r['Precision']:>9.4f} | {r['Recall']:>8.4f} | "
+            f"{r['F1-Score']:>8.4f} | {r['FP']:>4} | {r['FN']:>4}"
         )
     print(sep)
-
-    # 6. Feature Importance Table (XGBoost)
-    if xgb_model is not None:
-        importances = xgb_model.feature_importances_
-        feat_imp_df = pd.DataFrame({
-            "Feature": feature_names,
-            "Importance": importances
-        }).sort_values(by="Importance", ascending=False)
-
-        print("\n" + "=" * 75)
-        print(" XGBOOST FEATURE IMPORTANCE (TOP 10 FEATURES)")
-        print("=" * 75)
-        top10 = feat_imp_df.head(10)
-        print(f"{'Rank':<5} | {'Feature':<12} | {'Importance Score':>18}")
-        print("-" * 42)
-        for idx, (_, row) in enumerate(top10.iterrows(), 1):
-            print(f"{idx:<5} | {row['Feature']:<12} | {row['Importance']:>18.6f}")
-        print("-" * 42)
-
-    # 7. Model Comparison & Conceptual Analysis
-    best_model_row = df_results.loc[df_results["PR-AUC"].idxmax()]
-    xgb_row = df_results[df_results["Model Variant"] == "XGBoost (SMOTE)"].iloc[0]
-    dnn_row = df_results[df_results["Model Variant"] == "PyTorch DNN (SMOTE)"].iloc[0]
-    ae_rows = df_results[df_results["Model Variant"] == "PyTorch Autoencoder (Baseline)"]
-
-    print("\n" + "=" * 80)
-    print(" MODEL COMPARISON SUMMARY (SUPERVISED vs UNSUPERVISED AUTOENCODER)")
-    print("=" * 80)
-    print(f" [*] XGBoost (SMOTE) PR-AUC          : {xgb_row['PR-AUC']:.4f}")
-    print(f" [*] PyTorch DNN (SMOTE) PR-AUC      : {dnn_row['PR-AUC']:.4f}")
-    if not ae_rows.empty:
-        ae_row = ae_rows.iloc[0]
-        print(f" [*] PyTorch Autoencoder Baseline    : PR-AUC = {ae_row['PR-AUC']:.4f} | F1 = {ae_row['F1-Score']:.4f}")
-    
-    diff = dnn_row["PR-AUC"] - xgb_row["PR-AUC"]
-    if diff > 0:
-        print(f" [*] Result: PyTorch DNN BEAT XGBoost by +{diff:.4f} PR-AUC!")
-    else:
-        print(f" [*] Result: XGBoost maintained top rank over PyTorch DNN by +{abs(diff):.4f} PR-AUC.")
-    print(f"\n [🏆 CHAMPION MODEL]: {best_model_row['Model Variant']} (PR-AUC = {best_model_row['PR-AUC']:.4f})")
-    print("=" * 80)
-
-    print("\n" + "=" * 80)
-    print(" CONCEPTUAL COMPARISON: UNSUPERVISED AUTOENCODER vs SUPERVISED MODELS")
-    print("=" * 80)
-    print(
-        " The PyTorch Autoencoder operates in a purely unsupervised setting, learning to reconstruct\n"
-        " legitimate transaction patterns without ever seeing fraudulent examples during training.\n"
-        " While supervised models (XGBoost & PyTorch DNN) leverage labeled fraud data to explicitly\n"
-        " map feature boundaries separating classes—achieving superior PR-AUC (0.8186 for XGBoost)—the\n"
-        " Autoencoder provides crucial real-world utility for novel zero-day fraud detection where\n"
-        " labeled historical fraud samples are absent or rapidly shifting."
-    )
-    print("=" * 80)
 
 
 if __name__ == "__main__":

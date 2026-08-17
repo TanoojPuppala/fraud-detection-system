@@ -33,10 +33,6 @@ FN_COST_USD = 500.0  # $500 average loss per undetected fraud transaction
 
 # Mapping of Model Variant names to original filename in ml/models/
 MODEL_FILE_MAP = {
-    "Logistic Regression (Baseline)": "logistic_regression_baseline.pkl",
-    "Logistic Regression (SMOTE)": "logistic_regression_smote.pkl",
-    "Logistic Regression (Undersampled)": "logistic_regression_undersampled.pkl",
-    "XGBoost (SMOTE)": "xgboost_smote.pkl",
     "PyTorch DNN (SMOTE)": "dnn_smote.pt",
     "PyTorch Autoencoder (Baseline)": "autoencoder_baseline.pt",
 }

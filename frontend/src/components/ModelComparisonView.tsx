@@ -1,14 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, Award, Trophy, CheckCircle2, ShieldCheck, Target, Zap } from 'lucide-react';
+import { BarChart3, Award, Trophy, CheckCircle2, ShieldCheck, Target, Zap, Cpu } from 'lucide-react';
 import { fetchModelInfo } from '../api/client';
 
-const models = [
-  { name: 'XGBoost (SMOTE)',                   accuracy: '99.93%', rocauc: '0.9693', prauc: '0.8186', cost: '$10,595', recall: '77.89%', precision: '79.57%', fp: '19',    fn: '21', champion: false },
-  { name: 'PyTorch DNN (SMOTE)',               accuracy: '99.87%', rocauc: '0.9514', prauc: '0.7172', cost: '$9,770',  recall: '80.00%', precision: '58.46%', fp: '54',    fn: '19', champion: true  },
-  { name: 'Logistic Regression (Baseline)',    accuracy: '97.53%', rocauc: '0.9657', prauc: '0.6719', cost: '$12,945', recall: '87.37%', precision: '5.64%',  fp: '1,389', fn: '12', champion: false },
-  { name: 'Logistic Regression (SMOTE)',       accuracy: '97.37%', rocauc: '0.9626', prauc: '0.6750', cost: '$13,410', recall: '87.37%', precision: '5.30%',  fp: '1,482', fn: '12', champion: false },
-  { name: 'Logistic Regression (Undersample)', accuracy: '97.22%', rocauc: '0.9571', prauc: '0.5896', cost: '$13,815', recall: '87.37%', precision: '5.04%',  fp: '1,563', fn: '12', champion: false },
-  { name: 'PyTorch Autoencoder',               accuracy: '99.49%', rocauc: '0.9277', prauc: '0.2013', cost: '$23,730', recall: '52.63%', precision: '16.89%', fp: '246',   fn: '45', champion: false },
+const deepLearningModels = [
+  {
+    name: 'PyTorch DNN (SMOTE)',
+    architecture: 'Supervised Deep Neural Network (MLP)',
+    accuracy: '99.87%',
+    rocauc: '0.9514',
+    prauc: '0.7172',
+    cost: '$9,770',
+    recall: '80.00%',
+    precision: '58.46%',
+    fp: '54',
+    fn: '19',
+    champion: true,
+    latency: '8.06 ms'
+  },
+  {
+    name: 'PyTorch Autoencoder',
+    architecture: 'Unsupervised Anomaly Detection Autoencoder',
+    accuracy: '99.49%',
+    rocauc: '0.9277',
+    prauc: '0.2013',
+    cost: '$23,730',
+    recall: '52.63%',
+    precision: '16.89%',
+    fp: '246',
+    fn: '45',
+    champion: false,
+    latency: '3.75 ms'
+  },
 ];
 
 export const ModelComparisonView: React.FC = () => {
@@ -44,7 +66,7 @@ export const ModelComparisonView: React.FC = () => {
               <strong style={{ color: '#047857', fontFamily: 'JetBrains Mono, monospace' }}>
                 ${info?.metadata?.metrics?.['Total Business Cost ($)'] || '9,770'}
               </strong>{' '}
-              (saving $825 vs XGBoost by minimizing catastrophic false negatives).
+              (capturing 80.00% of all fraud transactions with only 19 missed cases across 56,746 held-out test records).
             </div>
           </div>
 
@@ -74,8 +96,8 @@ export const ModelComparisonView: React.FC = () => {
           </div>
           <div>
             <div className="text-xs-caps" style={{ fontSize: 9 }}>Peak Accuracy</div>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#059669' }}>99.93%</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>XGBoost (SMOTE)</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#059669' }}>99.87%</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>PyTorch DNN (SMOTE)</div>
           </div>
         </div>
 
@@ -85,7 +107,7 @@ export const ModelComparisonView: React.FC = () => {
           </div>
           <div>
             <div className="text-xs-caps" style={{ fontSize: 9 }}>Top ROC-AUC</div>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#2563eb' }}>0.9693 (96.9%)</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#2563eb' }}>0.9514 (95.1%)</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Exceeds 90% Benchmark</div>
           </div>
         </div>
@@ -96,8 +118,8 @@ export const ModelComparisonView: React.FC = () => {
           </div>
           <div>
             <div className="text-xs-caps" style={{ fontSize: 9 }}>Peak Recall</div>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>87.37%</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>83 of 95 Frauds Caught</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>80.00%</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>76 of 95 Frauds Caught</div>
           </div>
         </div>
 
@@ -119,7 +141,7 @@ export const ModelComparisonView: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <BarChart3 size={16} color="var(--accent)" />
             <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-              6-Model Benchmark Matrix (Overall Accuracy & ROC-AUC Evaluated)
+              Deep Learning Architecture Benchmark Matrix (PyTorch DNN & Autoencoders)
             </span>
           </div>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -133,7 +155,7 @@ export const ModelComparisonView: React.FC = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Model Variant</th>
+                <th>Model Architecture</th>
                 <th>Overall Accuracy</th>
                 <th>ROC-AUC</th>
                 <th>PR-AUC</th>
@@ -146,7 +168,7 @@ export const ModelComparisonView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {models.map((m, idx) => (
+              {deepLearningModels.map((m, idx) => (
                 <tr
                   key={idx}
                   style={{
@@ -155,8 +177,11 @@ export const ModelComparisonView: React.FC = () => {
                   }}
                 >
                   <td style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
-                    {m.champion && <Award size={12} color="#059669" />}
-                    {m.name}
+                    {m.champion ? <Award size={14} color="#059669" /> : <Cpu size={14} color="var(--text-muted)" />}
+                    <div>
+                      <div>{m.name}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>{m.architecture}</div>
+                    </div>
                   </td>
                   <td className="mono" style={{ color: '#059669', fontWeight: 700 }}>{m.accuracy}</td>
                   <td className="mono" style={{ color: '#2563eb', fontWeight: 700 }}>{m.rocauc}</td>
@@ -182,4 +207,3 @@ export const ModelComparisonView: React.FC = () => {
     </div>
   );
 };
-
