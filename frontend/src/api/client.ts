@@ -4,7 +4,7 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const origin = window.location.origin;
-    if (origin.includes('localhost:5173')) {
+    if (origin.includes(':5173')) {
       return 'http://localhost:8000/api/v1';
     }
     return `${origin}/api/v1`;

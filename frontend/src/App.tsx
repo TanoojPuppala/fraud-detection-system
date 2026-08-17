@@ -11,10 +11,16 @@ import { fetchSystemStats, SystemStats } from './api/client';
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const loadStats = async () => {
     try { setStats(await fetchSystemStats()); }
     catch (err) { console.error('Failed to load system stats', err); }
+  };
+
+  const handleTransactionScored = () => {
+    loadStats();
+    setRefreshKey(prev => prev + 1);
   };
 
   useEffect(() => {
@@ -45,8 +51,8 @@ export const App: React.FC = () => {
               </div>
 
               <KpiCards stats={stats} />
-              <SinglePredictForm />
-              <TransactionHistoryTable />
+              <SinglePredictForm onScored={handleTransactionScored} />
+              <TransactionHistoryTable refreshKey={refreshKey} />
             </>
           )}
 

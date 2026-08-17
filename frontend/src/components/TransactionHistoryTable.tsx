@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { History, CheckCircle, AlertOctagon, Filter } from 'lucide-react';
 import { fetchTransactionHistory } from '../api/client';
 
-export const TransactionHistoryTable: React.FC = () => {
+interface TransactionHistoryTableProps {
+  refreshKey?: number;
+}
+
+export const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({ refreshKey }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filter,  setFilter]  = useState<string>('All');
@@ -19,7 +23,7 @@ export const TransactionHistoryTable: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadHistory(); }, [filter]);
+  useEffect(() => { loadHistory(); }, [filter, refreshKey]);
 
   return (
     <div className="card" style={{ padding: 24 }}>
