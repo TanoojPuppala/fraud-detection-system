@@ -112,6 +112,35 @@ class MLInferenceService:
 
         return prob, is_fraud, risk_band, latency_ms
 
+    def predict_batch(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, List[str], float]:
+        """
+        Runs high-speed vectorized inference across a batch dataframe of transactions.
+        """
+        start_time = time.perf_counter()
+        cols_map = {str(col).lower(): col for col in df.columns}
+
+        matrix = np.zeros((len(df), len(FEATURE_ORDER)), dtype=np.float32)
+        for i, col in enumerate(FEATURE_ORDER):
+            col_key = col.lower()
+            if col_key in cols_map:
+                matrix[:, i] = pd.to_numeric(df[cols_map[col_key]], errors="coerce").fillna(0.0).values
+
+        if self.scaler is not None:
+            matrix = self.scaler.transform(matrix)
+
+        if self.is_pytorch:
+            tensor_input = torch.tensor(matrix, dtype=torch.float32).to(self.device)
+            with torch.no_grad():
+                probs = self.model(tensor_input).cpu().numpy().flatten()
+        else:
+            probs = self.model.predict_proba(matrix)[:, 1]
+
+        latency_ms = (time.perf_counter() - start_time) * 1000.0
+        is_frauds = probs >= self.threshold
+        risk_bands = ["Low" if p < 0.30 else "Medium" if p < 0.70 else "High" for p in probs]
+
+        return probs, is_frauds, risk_bands, latency_ms
+
     def get_shap_contributions(self, tx_dict: Dict[str, float]) -> List[Dict[str, Any]]:
         """
         Calculates heuristic feature attribution impact based on absolute z-scores / weights.

@@ -50,6 +50,32 @@ export interface PredictionResult {
   created_at: string;
 }
 
+export interface BatchPredictionItem {
+  prediction_id: number;
+  transaction_id: number;
+  amount: number;
+  time: number;
+  raw_probability: number;
+  is_fraud: boolean;
+  risk_band: 'Low' | 'Medium' | 'High';
+  decision_threshold: number;
+  model_version: string;
+  inference_time_ms: number;
+  created_at: string;
+}
+
+export interface BatchPredictionSummaryResponse {
+  total_processed: number;
+  fraud_detected_count: number;
+  high_risk_count: number;
+  medium_risk_count: number;
+  low_risk_count: number;
+  total_amount_processed_usd: number;
+  total_fraud_amount_usd: number;
+  batch_inference_time_ms: number;
+  predictions: BatchPredictionItem[];
+}
+
 export interface SimulatorStatus {
   is_running: boolean;
   interval_seconds: number;
@@ -74,7 +100,7 @@ export const predictTransaction = async (txData: Record<string, number>): Promis
   return response.data;
 };
 
-export const predictBatchCSV = async (file: File) => {
+export const predictBatchCSV = async (file: File): Promise<BatchPredictionSummaryResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   const response = await apiClient.post('/batch_predict', formData, {

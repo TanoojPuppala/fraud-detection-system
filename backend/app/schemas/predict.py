@@ -52,6 +52,8 @@ class PredictionResponse(BaseModel):
 
     prediction_id: int
     transaction_id: int
+    amount: float = 0.0
+    time: float = 0.0
     raw_probability: float
     is_fraud: bool
     risk_band: str  # 'Low', 'Medium', 'High'
@@ -68,4 +70,7 @@ class BatchPredictionSummary(BaseModel):
     high_risk_count: int
     medium_risk_count: int
     low_risk_count: int
+    total_amount_processed_usd: float = 0.0
+    total_fraud_amount_usd: float = 0.0
+    batch_inference_time_ms: float = 0.0
     predictions: List[PredictionResponse]
