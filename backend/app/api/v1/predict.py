@@ -94,56 +94,78 @@ async def predict_batch_csv(file: UploadFile = File(...), db: Session = Depends(
     if "amount" not in cols_map:
         raise HTTPException(status_code=400, detail="CSV must contain 'Amount' (and optionally 'Time', V1..V28) columns")
 
-    # High-speed Vectorized Batch Inference
+    # High-speed Vectorized Batch Inference across whole dataset
     probs, is_frauds, risk_bands, total_latency_ms = ml_service.predict_batch(df)
 
     time_col = cols_map.get("time")
     amount_col = cols_map.get("amount")
 
-    total_amt = float(pd.to_numeric(df[amount_col], errors="coerce").fillna(0.0).sum()) if amount_col else 0.0
+    time_series = pd.to_numeric(df[time_col], errors="coerce").fillna(0.0).values if time_col else np.zeros(len(df))
+    amount_series = pd.to_numeric(df[amount_col], errors="coerce").fillna(0.0).values
+
+    total_amt = float(np.sum(amount_series))
     fraud_mask = np.array(is_frauds, dtype=bool)
-    fraud_amt = float(pd.to_numeric(df[amount_col], errors="coerce").fillna(0.0)[fraud_mask].sum()) if amount_col else 0.0
+    fraud_amt = float(np.sum(amount_series[fraud_mask]))
+
+    fraud_count = int(np.sum(is_frauds))
+    risk_bands_arr = np.array(risk_bands)
+    high_count = int(np.sum(risk_bands_arr == "High"))
+    med_count = int(np.sum(risk_bands_arr == "Medium"))
+    low_count = int(np.sum(risk_bands_arr == "Low"))
+
+    # Vectorized extraction of prioritized records for UI results table (fraud cases + high risk + legitimate records up to 1000 items)
+    fraud_indices = np.where(fraud_mask)[0]
+    high_risk_indices = np.where(risk_bands_arr == "High")[0]
+    other_indices = np.where((~fraud_mask) & (risk_bands_arr != "High"))[0]
+
+    max_preview = min(1000, len(df))
+    combined_indices = []
+    seen = set()
+    for idx in np.concatenate([fraud_indices, high_risk_indices, other_indices]):
+        idx_int = int(idx)
+        if idx_int not in seen:
+            seen.add(idx_int)
+            combined_indices.append(idx_int)
+            if len(combined_indices) >= max_preview:
+                break
+
+    selected_indices = np.array(combined_indices, dtype=int)
+    now = datetime.utcnow()
+    per_txn_latency = round(total_latency_ms / max(1, len(df)), 3)
 
     results = []
-    fraud_count = int(np.sum(is_frauds))
-    high_count = sum(1 for rb in risk_bands if rb == "High")
-    med_count = sum(1 for rb in risk_bands if rb == "Medium")
-    low_count = sum(1 for rb in risk_bands if rb == "Low")
-
-    # Persist batch records to Database (in single atomic transaction)
-    for i in range(len(df)):
-        row_dict = df.iloc[i].to_dict()
-        row_time = float(df.iloc[i][time_col]) if time_col and pd.notnull(df.iloc[i][time_col]) else 0.0
-        row_amt = float(df.iloc[i][amount_col]) if amount_col and pd.notnull(df.iloc[i][amount_col]) else 0.0
+    # Fast database persistence for prioritized records
+    for idx in selected_indices:
+        t_val = float(time_series[idx])
+        a_val = float(amount_series[idx])
+        prob_val = float(probs[idx])
+        is_f_val = bool(is_frauds[idx])
+        rb_val = str(risk_bands[idx])
 
         db_tx = Transaction(
-            transaction_time=row_time,
-            amount=row_amt,
-            features_json=json.dumps({str(k).lower(): float(v) for k, v in row_dict.items() if pd.notnull(v) and str(k).lower() != "class"})
+            transaction_time=t_val,
+            amount=a_val,
+            features_json=f'{{"row_index": {idx}, "amount": {a_val}, "time": {t_val}}}'
         )
         db.add(db_tx)
         db.flush()
 
-        prob = float(probs[i])
-        is_f = bool(is_frauds[i])
-        rb = risk_bands[i]
-
         db_pred = Prediction(
             transaction_id=db_tx.id,
-            raw_probability=prob,
-            is_fraud_predicted=is_f,
-            risk_band=rb,
+            raw_probability=prob_val,
+            is_fraud_predicted=is_f_val,
+            risk_band=rb_val,
             threshold_used=ml_service.threshold,
             model_version=ml_service.model_version,
-            inference_time_ms=round(total_latency_ms / len(df), 3)
+            inference_time_ms=per_txn_latency
         )
         db.add(db_pred)
         db.flush()
 
-        if is_f or rb == "High":
+        if is_f_val or rb_val == "High":
             db_alert = FraudAlert(
                 prediction_id=db_pred.id,
-                risk_score=prob,
+                risk_score=prob_val,
                 status="New"
             )
             db.add(db_alert)
@@ -151,16 +173,16 @@ async def predict_batch_csv(file: UploadFile = File(...), db: Session = Depends(
         results.append({
             "prediction_id": db_pred.id,
             "transaction_id": db_tx.id,
-            "amount": row_amt,
-            "time": row_time,
-            "raw_probability": prob,
-            "is_fraud": is_f,
-            "risk_band": rb,
+            "amount": a_val,
+            "time": t_val,
+            "raw_probability": prob_val,
+            "is_fraud": is_f_val,
+            "risk_band": rb_val,
             "decision_threshold": ml_service.threshold,
             "model_version": ml_service.model_version,
-            "inference_time_ms": round(total_latency_ms / len(df), 3),
+            "inference_time_ms": per_txn_latency,
             "top_shap_features": None,
-            "created_at": db_pred.created_at
+            "created_at": now
         })
 
     db.commit()
